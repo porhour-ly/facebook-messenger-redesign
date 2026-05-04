@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Messenger Inbox Redesign</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --blue-primary: #0084FF;
+            --text-primary: #050505;
+            --text-secondary: #65676B;
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F0F2F5;
+            --border-color: #E4E6EB;
+            --unread-dot: #0084FF;
+            --online-green: #31A24C;
+            --row-height: 72px;
+            --tab-height: 44px;
+            --subtab-height: 36px;
+            --avatar-size: 48px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Mobile Frame */
+        .phone-frame {
+            width: 100%;
+            max-width: 390px;
+            height: 100vh;
+            max-height: 844px;
+            margin: 0 auto;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+        }
+
+        /* Top Navigation Bar */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            min-height: 56px;
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .top-bar-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .icon-btn:active {
+            background: var(--border-color);
+        }
+
+        .icon-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--text-primary);
+        }
+
+        /* Tab Bar */
+        .tab-bar {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            min-height: var(--tab-height);
+        }
+
+        .tab-bar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-pill {
+            flex-shrink: 0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            position: relative;
+            white-space: nowrap;
+        }
+
+        .tab-pill.active {
+            background: var(--blue-primary);
+            color: white;
+            font-weight: 600;
+        }
+
+        .tab-pill:active {
+            transform: scale(0.95);
+        }
+
+        .tab-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            background: #FF3B30;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+        }
+
+        .tab-badge.dot {
+            min-width: 10px;
+            height: 10px;
+            padding: 0;
+            top: 2px;
+            right: 2px;
+        }
+
+        /* Sub-tab Bar (Pages) */
+        .subtab-bar {
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 24px;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            min-height: var(--subtab-height);
+        }
+
+        .subtab {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            padding: 8px 0;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .subtab.active {
+            color: var(--blue-primary);
+            border-bottom-color: var(--blue-primary);
+            font-weight: 600;
+        }
+
+        /* Conversation List */
+        .conversation-list {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .conversation-row {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.15s;
+            position: relative;
+            min-height: var(--row-height);
+        }
+
+        .conversation-row:active {
+            background: var(--bg-secondary);
+        }
+
+        .conversation-row.unread .conv-name {
+            font-weight: 700;
+        }
+
+        .conversation-row.unread .conv-preview {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .conversation-row.unread::before {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--unread-dot);
+        }
+
+        /* Avatar */
+        .avatar {
+            width: var(--avatar-size);
+            height: var(--avatar-size);
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            position: relative;
+            overflow: visible;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .avatar-placeholder {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .avatar .online-dot {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--online-green);
+            border: 2px solid white;
+        }
+
+        .avatar.group-avatar {
+            background: #E4E6EB;
+            font-size: 22px;
+        }
+
+        .avatar.page-avatar {
+            background: #E4E6EB;
+            font-size: 20px;
+        }
+
+        .avatar.marketplace-avatar {
+            background: #E4E6EB;
+            font-size: 20px;
+        }
+
+        /* Conversation Content */
+        .conv-content {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .conv-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .conv-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 220px;
+        }
+
+        .conv-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+
+        .conv-preview {
+            font-size: 13px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .conv-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 2px;
+        }
+
+        .listing-preview {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 3px 8px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .ad-hint {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: #EBF5FF;
+            border-radius: 8px;
+            padding: 4px 8px;
+            font-size: 11px;
+            color: var(--blue-primary);
+            margin-top: 4px;
+        }
+
+        /* Active Now Row */
+        .active-now-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            gap: 12px;
+            border-bottom: 1px solid var(--border-color);
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .active-now-row::-webkit-scrollbar {
+            display: none;
+        }
+
+        .active-now-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .active-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .active-avatar .avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            font-size: 14px;
+        }
+
+        .active-avatar .online-dot {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--online-green);
+            border: 2px solid white;
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 32px;
+            text-align: center;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* Tab Content Views */
+        .tab-content {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .conversation-row {
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        /* Desktop hint */
+        @media (min-width: 500px) {
+            body {
+                background: #F0F2F5;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .phone-frame {
+                border-radius: 24px;
+                border: 1px solid var(--border-color);
+                box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+                height: 844px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="top-bar-left">
+                <button class="icon-btn">
+                    <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+                </button>
+                <span class="top-bar-title">Messenger</span>
+            </div>
+            <div class="top-bar-right">
+                <button class="icon-btn">
+                    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                </button>
+                <button class="icon-btn">
+                    <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab Bar -->
+        <div class="tab-bar">
+            <button class="tab-pill active" data-tab="all">
+                All
+                <span class="tab-badge">5</span>
+            </button>
+            <button class="tab-pill" data-tab="friends">
+                Friends
+                <span class="tab-badge">2</span>
+            </button>
+            <button class="tab-pill" data-tab="groups">
+                Groups
+                <span class="tab-badge">1</span>
+            </button>
+            <button class="tab-pill" data-tab="pages">
+                Pages
+                <span class="tab-badge dot"></span>
+            </button>
+            <button class="tab-pill" data-tab="marketplace">
+                Marketplace
+            </button>
+        </div>
+
+        <!-- ALL Tab -->
+        <div class="tab-content active" id="tab-all">
+            <div class="conversation-list">
+                <div class="conversation-row unread">
+                    <div class="avatar">
+                        <div class="avatar-placeholder" style="background: #7B61FF;">SC</div>
+                        <div class="online-dot"></div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Sarah Chen</span>
+                            <span class="conv-time">2m</span>
+                        </div>
+                        <span class="conv-preview">Hey, are you free tonight?</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row unread">
+                    <div class="avatar group-avatar">
+                        <div class="avatar-placeholder" style="background: #FF6B35;">WP</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Weekend Trip Planning</span>
+                            <span class="conv-time">15m</span>
+                        </div>
+                        <span class="conv-preview">Alex: I booked the cabin!</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row unread">
+                    <div class="avatar page-avatar">
+                        <div class="avatar-placeholder" style="background: #1B1B1B;">N</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Nike Store</span>
+                            <span class="conv-time">1h</span>
+                        </div>
+                        <span class="conv-preview">Your order has shipped! Track your delivery...</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar">
+                        <div class="avatar-placeholder" style="background: #00A67E;">DP</div>
+                        <div class="online-dot"></div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">David Park</span>
+                            <span class="conv-time">2h</span>
+                        </div>
+                        <span class="conv-preview">Thanks for the recommendation!</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row unread">
+                    <div class="avatar marketplace-avatar">
+                        <div class="avatar-placeholder" style="background: #E44D62;">JM</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Jason - iPhone 14 Pro</span>
+                            <span class="conv-time">3h</span>
+                        </div>
+                        <span class="conv-preview">Is it still available?</span>
+                        <div class="listing-preview">📷 iPhone 14 Pro — $650</div>
+                    </div>
+                </div>
+
+                <div class="conversation-row unread">
+                    <div class="avatar group-avatar">
+                        <div class="avatar-placeholder" style="background: #3B82F6;">FC</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Family Chat</span>
+                            <span class="conv-time">5h</span>
+                        </div>
+                        <span class="conv-preview">Mom: Dinner Sunday at 6?</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar">
+                        <div class="avatar-placeholder" style="background: #F59E0B;">ML</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Maria Lopez</span>
+                            <span class="conv-time">1d</span>
+                        </div>
+                        <span class="conv-preview">See you at yoga tomorrow!</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar group-avatar">
+                        <div class="avatar-placeholder" style="background: #8B5CF6;">WL</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Work Lunch Crew</span>
+                            <span class="conv-time">1d</span>
+                        </div>
+                        <span class="conv-preview">Priya: Thai place today?</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar page-avatar">
+                        <div class="avatar-placeholder" style="background: #6D4C2A;">LC</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Local Coffee Roasters</span>
+                            <span class="conv-time">2d</span>
+                        </div>
+                        <span class="conv-preview">Your rewards points are ready!</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar marketplace-avatar">
+                        <div class="avatar-placeholder" style="background: #10B981;">EW</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Emma - IKEA Desk</span>
+                            <span class="conv-time">2d</span>
+                        </div>
+                        <span class="conv-preview">Can I pick it up Saturday?</span>
+                        <div class="listing-preview">📷 IKEA Desk — $80</div>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar page-avatar">
+                        <div class="avatar-placeholder" style="background: #FF385C;">AB</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Airbnb Support</span>
+                            <span class="conv-time">3d</span>
+                        </div>
+                        <span class="conv-preview">We've processed your refund</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FRIENDS Tab -->
+        <div class="tab-content" id="tab-friends">
+            <div class="active-now-row">
+                <span class="active-now-label">Active</span>
+                <div class="active-avatar">
+                    <div class="avatar-placeholder" style="background: #7B61FF; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px;">SC</div>
+                    <div class="online-dot"></div>
+                </div>
+                <div class="active-avatar">
+                    <div class="avatar-placeholder" style="background: #00A67E; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px;">DP</div>
+                    <div class="online-dot"></div>
+                </div>
+                <div class="active-avatar">
+                    <div class="avatar-placeholder" style="background: #F59E0B; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px;">ML</div>
+                    <div class="online-dot"></div>
+                </div>
+                <div class="active-avatar">
+                    <div class="avatar-placeholder" style="background: #EC4899; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px;">RJ</div>
+                    <div class="online-dot"></div>
+                </div>
+                <div class="active-avatar">
+                    <div class="avatar-placeholder" style="background: #06B6D4; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px;">TK</div>
+                    <div class="online-dot"></div>
+                </div>
+            </div>
+            <div class="conversation-list">
+                <div class="conversation-row unread">
+                    <div class="avatar">
+                        <div class="avatar-placeholder" style="background: #7B61FF;">SC</div>
+                        <div class="online-dot"></div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Sarah Chen</span>
+                            <span class="conv-time">2m</span>
+                        </div>
+                        <span class="conv-preview">Hey, are you free tonight?</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row unread">
+                    <div class="avatar">
+                        <div class="avatar-placeholder" style="background: #00A67E;">DP</div>
+                        <div class="online-dot"></div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">David Park</span>
+                            <span class="conv-time">2h</span>
+                        </div>
+                        <span class="conv-preview">Thanks for the recommendation!</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar">
+                        <div class="avatar-placeholder" style="background: #F59E0B;">ML</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Maria Lopez</span>
+                            <span class="conv-time">1d</span>
+                        </div>
+                        <span class="conv-preview">See you at yoga tomorrow!</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar">
+                        <div class="avatar-placeholder" style="background: #EC4899;">RJ</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Rachel Johnson</span>
+                            <span class="conv-time">2d</span>
+                        </div>
+                        <span class="conv-preview">That movie was amazing!</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar">
+                        <div class="avatar-placeholder" style="background: #06B6D4;">TK</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Tom Kim</span>
+                            <span class="conv-time">3d</span>
+                        </div>
+                        <span class="conv-preview">Let's grab coffee next week</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GROUPS Tab -->
+        <div class="tab-content" id="tab-groups">
+            <div class="conversation-list">
+                <div class="conversation-row unread">
+                    <div class="avatar group-avatar">
+                        <div class="avatar-placeholder" style="background: #FF6B35;">WP</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Weekend Trip Planning</span>
+                            <span class="conv-time">15m</span>
+                        </div>
+                        <span class="conv-preview">Alex: I booked the cabin!</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar group-avatar">
+                        <div class="avatar-placeholder" style="background: #3B82F6;">FC</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Family Chat</span>
+                            <span class="conv-time">5h</span>
+                        </div>
+                        <span class="conv-preview">Mom: Dinner Sunday at 6?</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar group-avatar">
+                        <div class="avatar-placeholder" style="background: #8B5CF6;">WL</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Work Lunch Crew</span>
+                            <span class="conv-time">1d</span>
+                        </div>
+                        <span class="conv-preview">Priya: Thai place today?</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar group-avatar">
+                        <div class="avatar-placeholder" style="background: #14B8A6;">BC</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Book Club</span>
+                            <span class="conv-time">3d</span>
+                        </div>
+                        <span class="conv-preview">Nadia: Next meeting is Thursday</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar group-avatar">
+                        <div class="avatar-placeholder" style="background: #F97316;">RN</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Running Group</span>
+                            <span class="conv-time">5d</span>
+                        </div>
+                        <span class="conv-preview">Mike: 6am start tomorrow?</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGES Tab -->
+        <div class="tab-content" id="tab-pages">
+            <div class="subtab-bar">
+                <span class="subtab active" data-subtab="pages-all">All</span>
+                <span class="subtab" data-subtab="pages-active">Active</span>
+                <span class="subtab" data-subtab="pages-ads">From Ads</span>
+            </div>
+
+            <!-- Pages: All -->
+            <div class="conversation-list subtab-content active" id="subtab-pages-all">
+                <div class="conversation-row">
+                    <div class="avatar page-avatar">
+                        <div class="avatar-placeholder" style="background: #1B1B1B;">N</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Nike Store</span>
+                            <span class="conv-time">1h</span>
+                        </div>
+                        <span class="conv-preview">Your order has shipped! Track your delivery...</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar page-avatar">
+                        <div class="avatar-placeholder" style="background: #6D4C2A;">LC</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Local Coffee Roasters</span>
+                            <span class="conv-time">2d</span>
+                        </div>
+                        <span class="conv-preview">Your rewards points are ready!</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar page-avatar">
+                        <div class="avatar-placeholder" style="background: #FF385C;">AB</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Airbnb Support</span>
+                            <span class="conv-time">3d</span>
+                        </div>
+                        <span class="conv-preview">We've processed your refund</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar page-avatar">
+                        <div class="avatar-placeholder" style="background: #4CAF50;">FG</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">FitGear Pro</span>
+                            <span class="conv-time">1d</span>
+                        </div>
+                        <span class="conv-preview">Thanks for your interest! Use code...</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar page-avatar">
+                        <div class="avatar-placeholder" style="background: #2196F3;">CB</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">CloudBank</span>
+                            <span class="conv-time">4d</span>
+                        </div>
+                        <span class="conv-preview">Open your account in minutes...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pages: Active -->
+            <div class="conversation-list subtab-content" id="subtab-pages-active">
+                <div class="conversation-row">
+                    <div class="avatar page-avatar">
+                        <div class="avatar-placeholder" style="background: #1B1B1B;">N</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Nike Store</span>
+                            <span class="conv-time">1h</span>
+                        </div>
+                        <span class="conv-preview">Your order has shipped! Track your delivery...</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar page-avatar">
+                        <div class="avatar-placeholder" style="background: #6D4C2A;">LC</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Local Coffee Roasters</span>
+                            <span class="conv-time">2d</span>
+                        </div>
+                        <span class="conv-preview">Your rewards points are ready!</span>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar page-avatar">
+                        <div class="avatar-placeholder" style="background: #FF385C;">AB</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Airbnb Support</span>
+                            <span class="conv-time">3d</span>
+                        </div>
+                        <span class="conv-preview">We've processed your refund</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pages: From Ads -->
+            <div class="conversation-list subtab-content" id="subtab-pages-ads">
+                <div class="conversation-row">
+                    <div class="avatar page-avatar">
+                        <div class="avatar-placeholder" style="background: #4CAF50;">FG</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">FitGear Pro</span>
+                            <span class="conv-time">1d</span>
+                        </div>
+                        <span class="conv-preview">Thanks for your interest! Use code SAVE20...</span>
+                        <div class="ad-hint">💬 Reply to move to Active</div>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar page-avatar">
+                        <div class="avatar-placeholder" style="background: #2196F3;">CB</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">CloudBank</span>
+                            <span class="conv-time">4d</span>
+                        </div>
+                        <span class="conv-preview">Open your account in minutes...</span>
+                        <div class="ad-hint">💬 Reply to move to Active</div>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar page-avatar">
+                        <div class="avatar-placeholder" style="background: #9C27B0;">SS</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">SleepSync Mattress</span>
+                            <span class="conv-time">1w</span>
+                        </div>
+                        <span class="conv-preview">Get $200 off your first order...</span>
+                        <div class="ad-hint">💬 Reply to move to Active</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MARKETPLACE Tab -->
+        <div class="tab-content" id="tab-marketplace">
+            <div class="conversation-list">
+                <div class="conversation-row unread">
+                    <div class="avatar marketplace-avatar">
+                        <div class="avatar-placeholder" style="background: #E44D62;">JM</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Jason - iPhone 14 Pro</span>
+                            <span class="conv-time">3h</span>
+                        </div>
+                        <span class="conv-preview">Is it still available?</span>
+                        <div class="listing-preview">📷 iPhone 14 Pro — $650</div>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar marketplace-avatar">
+                        <div class="avatar-placeholder" style="background: #10B981;">EW</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Emma - IKEA Desk</span>
+                            <span class="conv-time">2d</span>
+                        </div>
+                        <span class="conv-preview">Can I pick it up Saturday?</span>
+                        <div class="listing-preview">📷 IKEA Desk — $80</div>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar marketplace-avatar">
+                        <div class="avatar-placeholder" style="background: #6366F1;">AK</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Amir - Mountain Bike</span>
+                            <span class="conv-time">4d</span>
+                        </div>
+                        <span class="conv-preview">Would you take $350?</span>
+                        <div class="listing-preview">📷 Trek Mountain Bike — $400</div>
+                    </div>
+                </div>
+
+                <div class="conversation-row">
+                    <div class="avatar marketplace-avatar">
+                        <div class="avatar-placeholder" style="background: #F472B6;">LS</div>
+                    </div>
+                    <div class="conv-content">
+                        <div class="conv-top">
+                            <span class="conv-name">Lisa - Bookshelf</span>
+                            <span class="conv-time">1w</span>
+                        </div>
+                        <span class="conv-preview">Sold! Thanks for the quick pickup</span>
+                        <div class="listing-preview">📷 Oak Bookshelf — $120</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        const tabPills = document.querySelectorAll('.tab-pill');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabPills.forEach(pill => {
+            pill.addEventListener('click', () => {
+                const tabId = pill.dataset.tab;
+
+                // Update pill states
+                tabPills.forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+
+                // Update content visibility
+                tabContents.forEach(content => content.classList.remove('active'));
+                document.getElementById(`tab-${tabId}`).classList.add('active');
+            });
+        });
+
+        // Sub-tab switching (Pages)
+        const subtabs = document.querySelectorAll('.subtab');
+        const subtabContents = document.querySelectorAll('.subtab-content');
+
+        subtabs.forEach(subtab => {
+            subtab.addEventListener('click', () => {
+                const subtabId = subtab.dataset.subtab;
+
+                // Update subtab states
+                subtabs.forEach(s => s.classList.remove('active'));
+                subtab.classList.add('active');
+
+                // Update subtab content visibility
+                subtabContents.forEach(content => content.classList.remove('active'));
+                document.getElementById(`subtab-${subtabId}`).classList.add('active');
+            });
+        });
+
+        // Swipe gesture support for tabs
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const phoneFrame = document.querySelector('.phone-frame');
+
+        phoneFrame.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        phoneFrame.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+
+        function handleSwipe() {
+            const diff = touchStartX - touchEndX;
+            if (Math.abs(diff) < 50) return; // minimum swipe distance
+
+            const currentTab = document.querySelector('.tab-pill.active');
+            const tabs = Array.from(tabPills);
+            const currentIndex = tabs.indexOf(currentTab);
+
+            if (diff > 0 && currentIndex < tabs.length - 1) {
+                // Swipe left - next tab
+                tabs[currentIndex + 1].click();
+            } else if (diff < 0 && currentIndex > 0) {
+                // Swipe right - previous tab
+                tabs[currentIndex - 1].click();
+            }
+        }
+    </script>
+</body>
+</html>
