@@ -32,7 +32,9 @@ export default function TabBar({ activeTab, onTabChange, unreadCounts }: TabBarP
           >
             {tab.label}
             {unreadCounts[tab.id] > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+              <span className={`ml-1.5 text-xs font-semibold ${
+                activeTab === tab.id ? "text-messenger-blue/60" : "text-gray-400"
+              }`}>
                 {unreadCounts[tab.id]}
               </span>
             )}

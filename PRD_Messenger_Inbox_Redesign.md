@@ -65,12 +65,14 @@ The inbox is structured into five primary tabs:
 ### 4. Pages
 - Business and page conversations only
 - Sub-navigation:
-  - **All**
-  - **Active**
-  - **From Ads**
+  - **All** — All page conversations. Shows "From Ad" label on conversations whose most recent page message originated from an ad.
+  - **Engaged** — Conversations where the user has replied at least once
+  - **Requested** — Conversations where the user has never replied (currently limited to ad-initiated messages, but extensible to other request types)
 - Rules:
-  - "From Ads" = conversations initiated via ads or one-off engagement
-  - If a user replies or meaningfully engages → conversation moves to **Active**
+  - A conversation is "Requested" when the user has never responded to the page
+  - If a user replies → conversation moves to **Engaged** and the "From Ad" label is removed
+  - The "You opened this chat through an ad. View ad" banner remains in chat history regardless of engagement
+  - A conversation can be in Engaged but still show a "From Ad" label if the most recent page message was an ad
 
 ### 5. Marketplace
 - All buying/selling conversations
@@ -88,7 +90,7 @@ The inbox is structured into five primary tabs:
 Users can filter by relationship type (Friends, Groups, Pages).
 
 ### 6.3 Clutter Containment
-Ads and one-off business chats are contained within **Pages → From Ads**.
+Ads and one-off business chats are contained within **Pages → Requested**.
 
 ### 6.4 Minimal Cognitive Load
 Simple tab-based navigation with no complex AI sorting layers.
@@ -101,8 +103,9 @@ Simple tab-based navigation with no complex AI sorting layers.
 Conversations exist in one system but are filtered into multiple views.
 
 ### Pages Behavior
-- "From Ads" → default state for ad-initiated conversations
-- On user engagement → moves automatically to "Active"
+- "Requested" → default state for conversations where the user has never replied
+- On user reply → moves automatically to "Engaged" and "From Ad" label is cleared
+- "From Ad" label → shown when the most recent page message originated from an ad (independent of Engaged/Requested status)
 
 ### Marketplace Behavior
 - Treated as a separate transactional system
@@ -126,9 +129,9 @@ Conversations exist in one system but are filtered into multiple views.
 
 | Sub-tab | Description |
 |---|---|
-| All | All page conversations |
-| Active | Conversations with user engagement |
-| From Ads | Ad-initiated or one-off conversations |
+| All | All page conversations (with "From Ad" label where applicable) |
+| Engaged | Conversations where the user has replied |
+| Requested | Conversations where the user has never replied |
 
 ---
 
@@ -167,7 +170,7 @@ Conversations exist in one system but are filtered into multiple views.
 
 This redesign introduces a structured, filter-based inbox for Messenger that preserves simplicity while solving core usability issues:
 
-- **Clutter reduction** — Ad and one-off chats are isolated in Pages → From Ads
+- **Clutter reduction** — Ad and one-off chats are isolated in Pages → Requested
 - **Improved discoverability** — Tab filters let users navigate by conversation type
 - **Clearer separation** — Personal, group, and transactional messages are distinct
 

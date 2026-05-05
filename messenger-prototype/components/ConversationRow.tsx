@@ -40,7 +40,7 @@ export default function ConversationRow({ conversation, showLabel = false, onTap
   return (
     <button
       onClick={() => onTap(conversation.id)}
-      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer text-left"
+      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer text-left"
     >
       <div className="relative flex-shrink-0">
         <div
@@ -53,35 +53,32 @@ export default function ConversationRow({ conversation, showLabel = false, onTap
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 min-w-0">
-            <h3
-              className={`text-[15px] truncate ${
-                conversation.unread ? "font-bold text-gray-900" : "font-medium text-gray-900"
-              }`}
-            >
-              {participant.name}
-            </h3>
-            {label && (
-              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 ${label.color}`}>
-                {label.text}
-              </span>
-            )}
-          </div>
-          <span
-            className={`text-xs flex-shrink-0 ml-2 ${
-              conversation.unread ? "text-messenger-blue font-semibold" : "text-gray-500"
+        <div className="flex items-center gap-2 min-w-0">
+          <h3
+            className={`text-[15px] truncate ${
+              conversation.unread ? "font-bold text-gray-900" : "font-normal text-gray-900"
             }`}
           >
-            {conversation.lastMessageTime}
-          </span>
+            {participant.name}
+          </h3>
+          {label && (
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 ${label.color}`}>
+              {label.text}
+            </span>
+          )}
         </div>
-        <p
-          className={`text-sm truncate mt-0.5 ${
-            conversation.unread ? "text-gray-900 font-semibold" : "text-gray-500"
-          }`}
-        >
-          {conversation.lastMessage}
+        <p className="flex items-center gap-0 mt-0.5 min-w-0">
+          <span
+            className={`text-[13px] truncate ${
+              conversation.unread ? "text-gray-900 font-semibold" : "text-gray-500"
+            }`}
+          >
+            {conversation.lastMessage}
+          </span>
+          <span className="text-[13px] text-gray-500 flex-shrink-0">
+            {" "}
+            · {conversation.lastMessageTime}
+          </span>
         </p>
       </div>
       {conversation.unread && (

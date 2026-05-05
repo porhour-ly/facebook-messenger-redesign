@@ -7,6 +7,8 @@ import MessageBubble from "./MessageBubble";
 type ChatViewProps = {
   conversation: Conversation;
   onBack: () => void;
+  onMessageSent: (conversationId: string, message: Message) => void;
+  onReplyReceived: (conversationId: string, message: Message) => void;
 };
 
 const avatarColors = [
@@ -25,8 +27,7 @@ function getAvatarColor(id: string) {
   return avatarColors[index];
 }
 
-export default function ChatView({ conversation, onBack }: ChatViewProps) {
-  const [messages, setMessages] = useState<Message[]>(conversation.messages);
+export default function ChatView({ conversation, onBack, onMessageSent, onReplyReceived }: ChatViewProps) {
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
@@ -39,7 +40,7 @@ export default function ChatView({ conversation, onBack }: ChatViewProps) {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isTyping, scrollToBottom]);
+  }, [conversation.messages, isTyping, scrollToBottom]);
 
   const sendMessage = () => {
     if (!inputValue.trim()) return;
@@ -51,9 +52,9 @@ export default function ChatView({ conversation, onBack }: ChatViewProps) {
       timestamp: Date.now(),
     };
 
-    setMessages((prev) => [...prev, newMsg]);
     setNewMessageIds((prev) => new Set(prev).add(newMsg.id));
     setInputValue("");
+    onMessageSent(conversation.id, newMsg);
 
     // Auto-reply after 1-2 seconds
     setTimeout(() => {
@@ -73,8 +74,8 @@ export default function ChatView({ conversation, onBack }: ChatViewProps) {
         timestamp: Date.now(),
       };
 
-      setMessages((prev) => [...prev, replyMsg]);
       setNewMessageIds((prev) => new Set(prev).add(replyMsg.id));
+      onReplyReceived(conversation.id, replyMsg);
     }, 1000 + Math.random() * 1000);
   };
 
@@ -132,8 +133,8 @@ export default function ChatView({ conversation, onBack }: ChatViewProps) {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-2">
-        {messages.map((message, index) => {
-          const prevMessage = index > 0 ? messages[index - 1] : null;
+        {conversation.messages.map((message, index) => {
+          const prevMessage = index > 0 ? conversation.messages[index - 1] : null;
           const showAdBanner = message.fromAd && (!prevMessage || !prevMessage.fromAd);
 
           return (

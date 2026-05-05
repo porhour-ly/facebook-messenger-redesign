@@ -7,11 +7,15 @@ import SubTabBar, { SubTabType } from "@/components/SubTabBar";
 import ConversationList from "@/components/ConversationList";
 import ActiveNowRow from "@/components/ActiveNowRow";
 import ChatView from "@/components/ChatView";
-import { conversations } from "@/data/conversations";
+import BottomNav from "@/components/BottomNav";
+import { conversations as initialConversations, Conversation, Message } from "@/data/conversations";
 
 type ViewState = "inbox" | "chat-entering" | "chat" | "chat-leaving";
 
 export default function InboxPage() {
+  const [allConversations, setAllConversations] = useState<Conversation[]>(
+    () => initialConversations.map((c) => ({ ...c, messages: [...c.messages] }))
+  );
   const [activeTab, setActiveTab] = useState<TabType>("all");
   const [activeSubTab, setActiveSubTab] = useState<SubTabType>("all");
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
@@ -26,7 +30,7 @@ export default function InboxPage() {
       marketplace: 0,
     };
 
-    conversations.forEach((conv) => {
+    allConversations.forEach((conv) => {
       if (conv.unread) {
         counts.all++;
         counts[conv.category]++;
@@ -34,10 +38,10 @@ export default function InboxPage() {
     });
 
     return counts;
-  }, []);
+  }, [allConversations]);
 
   const filteredConversations = useMemo(() => {
-    let filtered = conversations;
+    let filtered = allConversations;
 
     if (activeTab !== "all") {
       filtered = filtered.filter((c) => c.category === activeTab);
@@ -50,25 +54,64 @@ export default function InboxPage() {
     }
 
     return filtered;
-  }, [activeTab, activeSubTab]);
+  }, [allConversations, activeTab, activeSubTab]);
 
   const activeConversation = useMemo(
-    () => conversations.find((c) => c.id === activeConversationId) || null,
-    [activeConversationId]
+    () => allConversations.find((c) => c.id === activeConversationId) || null,
+    [allConversations, activeConversationId]
   );
 
   const chatVisible = viewState !== "inbox";
 
+  // Mark conversation as read
+  const markAsRead = useCallback((id: string) => {
+    setAllConversations((prev) =>
+      prev.map((c) => (c.id === id && c.unread ? { ...c, unread: false } : c))
+    );
+  }, []);
+
+  // Handle user sending a message in a conversation
+  const handleMessageSent = useCallback((conversationId: string, message: Message) => {
+    setAllConversations((prev) =>
+      prev.map((c) => {
+        if (c.id !== conversationId) return c;
+        return {
+          ...c,
+          messages: [...c.messages, message],
+          lastMessage: message.text,
+          lastMessageTime: "now",
+          hasUserReplied: true,
+          lastMessageFromAd: false,
+        };
+      })
+    );
+  }, []);
+
+  // Handle auto-reply arriving in a conversation
+  const handleReplyReceived = useCallback((conversationId: string, message: Message) => {
+    setAllConversations((prev) =>
+      prev.map((c) => {
+        if (c.id !== conversationId) return c;
+        return {
+          ...c,
+          messages: [...c.messages, message],
+          lastMessage: message.text,
+          lastMessageTime: "now",
+        };
+      })
+    );
+  }, []);
+
   const openChat = useCallback((id: string) => {
     setActiveConversationId(id);
+    markAsRead(id);
     setViewState("chat-entering");
-    // Force a paint with the chat off-screen, then slide it in
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         setViewState("chat");
       });
     });
-  }, []);
+  }, [markAsRead]);
 
   const closeChat = useCallback(() => {
     setViewState("chat-leaving");
@@ -118,9 +161,10 @@ export default function InboxPage() {
         <ConversationList
           key={`${activeTab}-${activeSubTab}`}
           conversations={filteredConversations}
-          showLabels={activeTab === "pages"}
+          showLabels={activeTab === "all" || activeTab === "pages"}
           onConversationTap={openChat}
         />
+        <BottomNav unreadCount={unreadCounts.all} />
       </div>
 
       {/* Chat layer */}
@@ -132,7 +176,12 @@ export default function InboxPage() {
             transition: "transform 300ms ease-in-out",
           }}
         >
-          <ChatView conversation={activeConversation} onBack={closeChat} />
+          <ChatView
+            conversation={activeConversation}
+            onBack={closeChat}
+            onMessageSent={handleMessageSent}
+            onReplyReceived={handleReplyReceived}
+          />
         </div>
       )}
     </div>
