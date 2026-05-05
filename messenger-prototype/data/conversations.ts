@@ -3,6 +3,8 @@ export type Message = {
   senderId: string;
   text: string;
   timestamp: number;
+  /** Whether this message was delivered via an ad */
+  fromAd?: boolean;
 };
 
 export type User = {
@@ -20,7 +22,10 @@ export type Conversation = {
   lastMessageTime: string;
   unread: boolean;
   category: "friends" | "groups" | "pages" | "marketplace";
-  pageSubCategory?: "engaged" | "from_ads";
+  /** Whether the user has ever replied to this page */
+  hasUserReplied?: boolean;
+  /** Whether the most recent message from the page originated from an ad */
+  lastMessageFromAd?: boolean;
   isGroup: boolean;
 };
 
@@ -46,6 +51,7 @@ export const users: User[] = [
   { id: "12", name: "Marketplace Seller", avatar: "MS", isOnline: true },
   { id: "13", name: "Vintage Finds", avatar: "VF", isOnline: false },
   { id: "14", name: "David Park", avatar: "DP", isOnline: true },
+  { id: "15", name: "Spotify", avatar: "SP", isOnline: true },
 ];
 
 const now = Date.now();
@@ -192,7 +198,8 @@ export const conversations: Conversation[] = [
     participants: [users[8]],
     isGroup: false,
     category: "pages",
-    pageSubCategory: "engaged",
+    hasUserReplied: true,
+    lastMessageFromAd: false,
     lastMessage: "Your order has been shipped! Track it here.",
     lastMessageTime: "45m",
     unread: true,
@@ -220,17 +227,18 @@ export const conversations: Conversation[] = [
     participants: [users[9]],
     isGroup: false,
     category: "pages",
-    pageSubCategory: "from_ads",
+    hasUserReplied: false,
+    lastMessageFromAd: true,
     lastMessage: "🍕 50% off all orders this weekend! Use code YUMMY50",
     lastMessageTime: "2h",
     unread: true,
     messages: [
-      { id: "m1", senderId: "10", text: "Welcome to FoodieDeals! 🍔 Thanks for clicking our ad — here's 20% off your first order: WELCOME20", timestamp: now - 72 * hour },
-      { id: "m2", senderId: "10", text: "We work with 200+ local restaurants! Thai, Italian, Mexican, Japanese — you name it 🌮🍣", timestamp: now - 48 * hour },
-      { id: "m3", senderId: "10", text: "We have a dedicated veggie section with 50+ restaurants. Try Green Garden or Veggie Bowl Co — customer favorites! 🥗", timestamp: now - 36 * hour },
-      { id: "m4", senderId: "10", text: "Their Buddha Bowl and Mushroom Risotto are top sellers! Both under $15 with your discount 😋", timestamp: now - 24 * hour },
-      { id: "m5", senderId: "10", text: "Weekend special unlocked! Free delivery on all orders over $25 🚗", timestamp: now - 12 * hour },
-      { id: "m6", senderId: "10", text: "🍕 50% off all orders this weekend! Use code YUMMY50", timestamp: now - 2 * hour },
+      { id: "m1", senderId: "10", text: "Welcome to FoodieDeals! 🍔 Thanks for clicking our ad — here's 20% off your first order: WELCOME20", timestamp: now - 72 * hour, fromAd: true },
+      { id: "m2", senderId: "10", text: "We work with 200+ local restaurants! Thai, Italian, Mexican, Japanese — you name it 🌮🍣", timestamp: now - 48 * hour, fromAd: true },
+      { id: "m3", senderId: "10", text: "We have a dedicated veggie section with 50+ restaurants. Try Green Garden or Veggie Bowl Co — customer favorites! 🥗", timestamp: now - 36 * hour, fromAd: true },
+      { id: "m4", senderId: "10", text: "Their Buddha Bowl and Mushroom Risotto are top sellers! Both under $15 with your discount 😋", timestamp: now - 24 * hour, fromAd: true },
+      { id: "m5", senderId: "10", text: "Weekend special unlocked! Free delivery on all orders over $25 🚗", timestamp: now - 12 * hour, fromAd: true },
+      { id: "m6", senderId: "10", text: "🍕 50% off all orders this weekend! Use code YUMMY50", timestamp: now - 2 * hour, fromAd: true },
     ],
   },
   {
@@ -238,18 +246,41 @@ export const conversations: Conversation[] = [
     participants: [users[10]],
     isGroup: false,
     category: "pages",
-    pageSubCategory: "from_ads",
+    hasUserReplied: false,
+    lastMessageFromAd: true,
     lastMessage: "New running shoes just dropped! Limited edition 🏃",
     lastMessageTime: "4h",
     unread: false,
     messages: [
-      { id: "m1", senderId: "11", text: "Thanks for following Nike Running! 👟 Ready to level up your runs?", timestamp: now - 96 * hour },
-      { id: "m2", senderId: "11", text: "We noticed you clicked on our Pegasus ad — great taste! It's our most popular daily trainer.", timestamp: now - 72 * hour },
-      { id: "m3", senderId: "11", text: "The Pegasus 41 drops next month! Early access members get first dibs 🔔", timestamp: now - 48 * hour },
-      { id: "m4", senderId: "11", text: "Launch colors: Black/White, Navy/Orange, and a limited Ghost Green colorway. Ghost Green is exclusive to early access! 💚", timestamp: now - 36 * hour },
-      { id: "m5", senderId: "11", text: "Pegasus runs true to size — we recommend trying with your running socks for best fit 🧦", timestamp: now - 24 * hour },
-      { id: "m6", senderId: "11", text: "⏰ 24hr reminder: Early access opens tomorrow at 9AM! Be ready.", timestamp: now - 12 * hour },
-      { id: "m7", senderId: "11", text: "New running shoes just dropped! Limited edition 🏃", timestamp: now - 4 * hour },
+      { id: "m1", senderId: "11", text: "Thanks for following Nike Running! 👟 Ready to level up your runs?", timestamp: now - 96 * hour, fromAd: true },
+      { id: "m2", senderId: "11", text: "We noticed you clicked on our Pegasus ad — great taste! It's our most popular daily trainer.", timestamp: now - 72 * hour, fromAd: true },
+      { id: "m3", senderId: "11", text: "The Pegasus 41 drops next month! Early access members get first dibs 🔔", timestamp: now - 48 * hour, fromAd: true },
+      { id: "m4", senderId: "11", text: "Launch colors: Black/White, Navy/Orange, and a limited Ghost Green colorway. Ghost Green is exclusive to early access! 💚", timestamp: now - 36 * hour, fromAd: true },
+      { id: "m5", senderId: "11", text: "Pegasus runs true to size — we recommend trying with your running socks for best fit 🧦", timestamp: now - 24 * hour, fromAd: true },
+      { id: "m6", senderId: "11", text: "⏰ 24hr reminder: Early access opens tomorrow at 9AM! Be ready.", timestamp: now - 12 * hour, fromAd: true },
+      { id: "m7", senderId: "11", text: "New running shoes just dropped! Limited edition 🏃", timestamp: now - 4 * hour, fromAd: true },
+    ],
+  },
+  {
+    id: "conv15",
+    participants: [users[14]],
+    isGroup: false,
+    category: "pages",
+    hasUserReplied: true,
+    lastMessageFromAd: true,
+    lastMessage: "🎧 Your 2024 Wrapped is here! Tap to see your top songs",
+    lastMessageTime: "5h",
+    unread: true,
+    messages: [
+      { id: "m1", senderId: "15", text: "Welcome to Spotify! 🎵 Let us know if you need help with your account.", timestamp: now - 168 * hour },
+      { id: "m2", senderId: "me", text: "Hi! I'm having trouble linking my account to my smart speaker", timestamp: now - 167 * hour },
+      { id: "m3", senderId: "15", text: "No worries! Go to Settings > Connect to a Device > Select your speaker. Make sure both are on the same WiFi network.", timestamp: now - 166 * hour },
+      { id: "m4", senderId: "me", text: "That worked, thank you!", timestamp: now - 165 * hour },
+      { id: "m5", senderId: "15", text: "Glad to help! Enjoy your music 🎶", timestamp: now - 164 * hour },
+      { id: "m6", senderId: "me", text: "One more question — how do I get the student discount?", timestamp: now - 96 * hour },
+      { id: "m7", senderId: "15", text: "You can verify your student status at spotify.com/student. It's 50% off Premium! 🎓", timestamp: now - 95 * hour },
+      { id: "m8", senderId: "me", text: "Done! Thanks again", timestamp: now - 94 * hour },
+      { id: "m9", senderId: "15", text: "🎧 Your 2024 Wrapped is here! Tap to see your top songs", timestamp: now - 5 * hour, fromAd: true },
     ],
   },
   {
@@ -373,5 +404,10 @@ export const autoReplies: Record<string, string[]> = {
     "How about Wednesday morning?",
     "There's a new cafe on 5th that's great",
     "I'll send you the details!",
+  ],
+  conv15: [
+    "Glad you enjoyed your Wrapped! 🎉",
+    "Want us to create a playlist based on your top artists?",
+    "Check out our new AI DJ feature — it's personalized just for you!",
   ],
 };

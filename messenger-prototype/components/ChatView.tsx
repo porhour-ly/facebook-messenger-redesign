@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { Conversation, Message, autoReplies } from "@/data/conversations";
 import MessageBubble from "./MessageBubble";
 
 type ChatViewProps = {
   conversation: Conversation;
+  onBack: () => void;
 };
 
 const avatarColors = [
@@ -25,8 +25,7 @@ function getAvatarColor(id: string) {
   return avatarColors[index];
 }
 
-export default function ChatView({ conversation }: ChatViewProps) {
-  const router = useRouter();
+export default function ChatView({ conversation, onBack }: ChatViewProps) {
   const [messages, setMessages] = useState<Message[]>(conversation.messages);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -94,7 +93,7 @@ export default function ChatView({ conversation }: ChatViewProps) {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-messenger-border px-3 py-2.5 flex items-center gap-3">
         <button
-          onClick={() => router.back()}
+          onClick={onBack}
           className="w-9 h-9 rounded-full hover:bg-messenger-gray flex items-center justify-center transition-colors"
         >
           <svg className="w-6 h-6 text-messenger-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,14 +132,28 @@ export default function ChatView({ conversation }: ChatViewProps) {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-2">
-        {messages.map((message) => (
-          <MessageBubble
-            key={message.id}
-            message={message}
-            isOwn={message.senderId === "me"}
-            showAnimation={newMessageIds.has(message.id)}
-          />
-        ))}
+        {messages.map((message, index) => {
+          const prevMessage = index > 0 ? messages[index - 1] : null;
+          const showAdBanner = message.fromAd && (!prevMessage || !prevMessage.fromAd);
+
+          return (
+            <div key={message.id}>
+              {showAdBanner && (
+                <div className="flex items-center justify-center py-2 my-1">
+                  <p className="text-xs text-gray-500">
+                    You opened this chat through an ad.{" "}
+                    <button className="text-messenger-blue font-semibold">View ad</button>
+                  </p>
+                </div>
+              )}
+              <MessageBubble
+                message={message}
+                isOwn={message.senderId === "me"}
+                showAnimation={newMessageIds.has(message.id)}
+              />
+            </div>
+          );
+        })}
         {isTyping && (
           <div className="flex justify-start animate-fade-in">
             <div className="bg-messenger-gray px-4 py-3 rounded-2xl rounded-bl-md">

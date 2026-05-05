@@ -18,8 +18,9 @@ const config: Config = {
       },
       animation: {
         "slide-up": "slideUp 0.3s ease-out",
-        "fade-in": "fadeIn 0.2s ease-out",
-        "bubble-in": "bubbleIn 0.3s ease-out",
+        "fade-in": "fadeIn 0.25s ease-out forwards",
+        "bubble-in": "bubbleIn 0.25s ease-out",
+        "list-in": "listIn 0.25s ease-out forwards",
       },
       keyframes: {
         slideUp: {
@@ -31,8 +32,12 @@ const config: Config = {
           "100%": { opacity: "1" },
         },
         bubbleIn: {
-          "0%": { transform: "scale(0.8)", opacity: "0" },
+          "0%": { transform: "scale(0.85)", opacity: "0" },
           "100%": { transform: "scale(1)", opacity: "1" },
+        },
+        listIn: {
+          "0%": { opacity: "0", transform: "translateY(6px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
         },
       },
     },

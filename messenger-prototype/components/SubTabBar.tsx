@@ -1,6 +1,6 @@
 "use client";
 
-export type SubTabType = "all" | "engaged" | "from_ads";
+export type SubTabType = "all" | "engaged" | "requested";
 
 type SubTabBarProps = {
   activeSubTab: SubTabType;
@@ -10,7 +10,7 @@ type SubTabBarProps = {
 const subTabs: { id: SubTabType; label: string }[] = [
   { id: "all", label: "All" },
   { id: "engaged", label: "Engaged" },
-  { id: "from_ads", label: "From Ads" },
+  { id: "requested", label: "Requested" },
 ];
 
 export default function SubTabBar({ activeSubTab, onSubTabChange }: SubTabBarProps) {

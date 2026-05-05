@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { Conversation } from "@/data/conversations";
 
 type ConversationRowProps = {
   conversation: Conversation;
   showLabel?: boolean;
+  onTap: (id: string) => void;
 };
 
 const avatarColors = [
@@ -25,25 +25,22 @@ function getAvatarColor(id: string) {
 }
 
 function getLabel(conversation: Conversation): { text: string; color: string } | null {
-  if (!conversation.pageSubCategory) return null;
-  if (conversation.pageSubCategory === "engaged") {
-    return { text: "Engaged", color: "bg-green-100 text-green-700" };
-  }
-  if (conversation.pageSubCategory === "from_ads") {
-    return { text: "From Ads", color: "bg-purple-100 text-purple-700" };
+  if (conversation.category !== "pages") return null;
+  if (conversation.lastMessageFromAd) {
+    return { text: "From Ad", color: "bg-purple-100 text-purple-700" };
   }
   return null;
 }
 
-export default function ConversationRow({ conversation, showLabel = false }: ConversationRowProps) {
+export default function ConversationRow({ conversation, showLabel = false, onTap }: ConversationRowProps) {
   const participant = conversation.participants[0];
   const colorClass = getAvatarColor(participant.id);
   const label = showLabel ? getLabel(conversation) : null;
 
   return (
-    <Link
-      href={`/chat/${conversation.id}`}
-      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer"
+    <button
+      onClick={() => onTap(conversation.id)}
+      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer text-left"
     >
       <div className="relative flex-shrink-0">
         <div
@@ -90,6 +87,6 @@ export default function ConversationRow({ conversation, showLabel = false }: Con
       {conversation.unread && (
         <div className="w-3 h-3 rounded-full bg-messenger-blue flex-shrink-0" />
       )}
-    </Link>
+    </button>
   );
 }
