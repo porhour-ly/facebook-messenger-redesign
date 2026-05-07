@@ -28,6 +28,7 @@ export type Conversation = {
   /** Whether the most recent message from the page originated from an ad */
   lastMessageFromAd?: boolean;
   isGroup: boolean;
+  archived?: boolean;
 };
 
 export const currentUser: User = {

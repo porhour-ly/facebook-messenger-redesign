@@ -8,6 +8,8 @@ import ConversationList from "@/components/ConversationList";
 import ActiveNowRow from "@/components/ActiveNowRow";
 import ChatView from "@/components/ChatView";
 import BottomNav from "@/components/BottomNav";
+import ReviewCard from "@/components/ReviewCard";
+import UndoToast from "@/components/UndoToast";
 import { conversations as initialConversations, Conversation, Message } from "@/data/conversations";
 
 type ViewState = "inbox" | "chat-entering" | "chat" | "chat-leaving";
@@ -21,27 +23,36 @@ export default function InboxPage() {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [viewState, setViewState] = useState<ViewState>("inbox");
 
+  // --- Cleanup state (Concepts 2 & 3) ---
+  const [reviewCardDismissed, setReviewCardDismissed] = useState(false);
+  const [swipeHintShown, setSwipeHintShown] = useState(false);
+  const [showUndoToast, setShowUndoToast] = useState(false);
+  const [lastArchivedIds, setLastArchivedIds] = useState<string[]>([]);
+  const [undoMessage, setUndoMessage] = useState("");
+
+  // --- Derived data ---
+  const inactiveAdConversations = useMemo(
+    () => allConversations.filter(
+      (c) => c.lastMessageFromAd && !c.hasUserReplied && !c.archived
+    ),
+    [allConversations]
+  );
+
   const unreadCounts = useMemo(() => {
     const counts: Record<TabType, number> = {
-      all: 0,
-      friends: 0,
-      groups: 0,
-      pages: 0,
-      marketplace: 0,
+      all: 0, friends: 0, groups: 0, pages: 0, marketplace: 0,
     };
-
     allConversations.forEach((conv) => {
-      if (conv.unread) {
+      if (conv.unread && !conv.archived) {
         counts.all++;
         counts[conv.category]++;
       }
     });
-
     return counts;
   }, [allConversations]);
 
   const filteredConversations = useMemo(() => {
-    let filtered = allConversations;
+    let filtered = allConversations.filter((c) => !c.archived);
 
     if (activeTab !== "all") {
       filtered = filtered.filter((c) => c.category === activeTab);
@@ -63,14 +74,41 @@ export default function InboxPage() {
 
   const chatVisible = viewState !== "inbox";
 
-  // Mark conversation as read
+  // --- Archive helpers ---
+  const archiveConversation = useCallback((id: string) => {
+    setAllConversations((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, archived: true } : c))
+    );
+    setLastArchivedIds([id]);
+    const conv = allConversations.find((c) => c.id === id);
+    setUndoMessage(`Archived ${conv?.participants[0]?.name || "conversation"}`);
+    setShowUndoToast(true);
+  }, [allConversations]);
+
+  const archiveConversations = useCallback((ids: string[]) => {
+    setAllConversations((prev) =>
+      prev.map((c) => (ids.includes(c.id) ? { ...c, archived: true } : c))
+    );
+    setLastArchivedIds(ids);
+    setUndoMessage(`Archived ${ids.length} conversation${ids.length !== 1 ? "s" : ""}`);
+    setShowUndoToast(true);
+  }, []);
+
+  const undoArchive = useCallback(() => {
+    setAllConversations((prev) =>
+      prev.map((c) => (lastArchivedIds.includes(c.id) ? { ...c, archived: false } : c))
+    );
+    setShowUndoToast(false);
+    setLastArchivedIds([]);
+  }, [lastArchivedIds]);
+
+  // --- Core inbox handlers ---
   const markAsRead = useCallback((id: string) => {
     setAllConversations((prev) =>
       prev.map((c) => (c.id === id && c.unread ? { ...c, unread: false } : c))
     );
   }, []);
 
-  // Handle user sending a message in a conversation
   const handleMessageSent = useCallback((conversationId: string, message: Message) => {
     setAllConversations((prev) =>
       prev.map((c) => {
@@ -87,7 +125,6 @@ export default function InboxPage() {
     );
   }, []);
 
-  // Handle auto-reply arriving in a conversation
   const handleReplyReceived = useCallback((conversationId: string, message: Message) => {
     setAllConversations((prev) =>
       prev.map((c) => {
@@ -121,18 +158,20 @@ export default function InboxPage() {
     }, 300);
   }, []);
 
+  // --- Transform styles ---
   const inboxTransform =
     viewState === "chat" ? "translateX(-30%) scale(0.95)" :
     viewState === "chat-leaving" ? "translateX(0) scale(1)" :
     "translateX(0) scale(1)";
 
-  const inboxOpacity =
-    viewState === "chat" ? 0.4 : 1;
+  const inboxOpacity = viewState === "chat" ? 0.4 : 1;
 
   const chatTransform =
     viewState === "chat-entering" ? "translateX(100%)" :
     viewState === "chat-leaving" ? "translateX(100%)" :
     "translateX(0)";
+
+  const showReviewCard = (activeTab === "all" || (activeTab === "pages" && activeSubTab === "all")) && inactiveAdConversations.length >= 3 && !reviewCardDismissed;
 
   return (
     <div className="relative h-full overflow-hidden bg-white">
@@ -158,11 +197,30 @@ export default function InboxPage() {
           <SubTabBar activeSubTab={activeSubTab} onSubTabChange={setActiveSubTab} />
         )}
         {activeTab === "friends" && <ActiveNowRow />}
+
         <ConversationList
           key={`${activeTab}-${activeSubTab}`}
           conversations={filteredConversations}
           showLabels={activeTab === "all" || activeTab === "pages"}
           onConversationTap={openChat}
+          reviewCard={
+            showReviewCard ? (
+              <ReviewCard
+                inactiveCount={inactiveAdConversations.length}
+                onArchiveAll={() => archiveConversations(inactiveAdConversations.map((c) => c.id))}
+                onReview={() => {
+                  setActiveTab("pages");
+                  setActiveSubTab("requested");
+                  setReviewCardDismissed(true);
+                }}
+                onDismiss={() => setReviewCardDismissed(true)}
+              />
+            ) : undefined
+          }
+          reviewCardPosition={3}
+          onArchive={archiveConversation}
+          swipeHintShown={swipeHintShown}
+          onSwipeHintShown={() => setSwipeHintShown(true)}
         />
         <BottomNav unreadCount={unreadCounts.all} />
       </div>
@@ -183,6 +241,15 @@ export default function InboxPage() {
             onReplyReceived={handleReplyReceived}
           />
         </div>
+      )}
+
+      {/* Undo Toast */}
+      {showUndoToast && (
+        <UndoToast
+          message={undoMessage}
+          onUndo={undoArchive}
+          onExpire={() => setShowUndoToast(false)}
+        />
       )}
     </div>
   );

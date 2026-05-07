@@ -1,15 +1,31 @@
 "use client";
 
+import { ReactNode } from "react";
 import { Conversation } from "@/data/conversations";
 import ConversationRow from "./ConversationRow";
+import SwipeableConversationRow from "./SwipeableConversationRow";
 
 type ConversationListProps = {
   conversations: Conversation[];
   showLabels?: boolean;
   onConversationTap: (id: string) => void;
+  reviewCard?: ReactNode;
+  reviewCardPosition?: number;
+  onArchive?: (id: string) => void;
+  swipeHintShown?: boolean;
+  onSwipeHintShown?: () => void;
 };
 
-export default function ConversationList({ conversations, showLabels = false, onConversationTap }: ConversationListProps) {
+export default function ConversationList({
+  conversations,
+  showLabels = false,
+  onConversationTap,
+  reviewCard,
+  reviewCardPosition = 3,
+  onArchive,
+  swipeHintShown = true,
+  onSwipeHintShown,
+}: ConversationListProps) {
   if (conversations.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-8 text-center animate-fade-in">
@@ -23,16 +39,50 @@ export default function ConversationList({ conversations, showLabels = false, on
     );
   }
 
+  // Find the first eligible ad conversation for the swipe hint
+  let hintShownForId: string | null = null;
+  if (!swipeHintShown && onArchive) {
+    const firstEligible = conversations.find(
+      (c) => c.lastMessageFromAd && !c.hasUserReplied
+    );
+    if (firstEligible) hintShownForId = firstEligible.id;
+  }
+
   return (
     <div className="flex-1 overflow-y-auto animate-list-in">
-      {conversations.map((conversation) => (
-        <ConversationRow
-          key={conversation.id}
-          conversation={conversation}
-          showLabel={showLabels}
-          onTap={onConversationTap}
-        />
-      ))}
+      {conversations.map((conversation, index) => {
+        const isSwipeable = onArchive && conversation.lastMessageFromAd && !conversation.hasUserReplied;
+
+        return (
+          <div key={conversation.id}>
+            {/* Inject review card at position */}
+            {reviewCard && index === reviewCardPosition && (
+              <div key="review-card">{reviewCard}</div>
+            )}
+
+            {isSwipeable ? (
+              <SwipeableConversationRow
+                conversation={conversation}
+                showLabel={showLabels}
+                onTap={onConversationTap}
+                onArchive={onArchive}
+                showSwipeHint={hintShownForId === conversation.id}
+                onSwipeHintShown={onSwipeHintShown || (() => {})}
+              />
+            ) : (
+              <ConversationRow
+                conversation={conversation}
+                showLabel={showLabels}
+                onTap={onConversationTap}
+              />
+            )}
+          </div>
+        );
+      })}
+      {/* If reviewCard position is beyond list length, show it at the end */}
+      {reviewCard && reviewCardPosition >= conversations.length && (
+        <div key="review-card">{reviewCard}</div>
+      )}
     </div>
   );
 }
