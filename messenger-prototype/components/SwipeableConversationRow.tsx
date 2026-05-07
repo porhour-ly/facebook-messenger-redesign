@@ -149,9 +149,9 @@ export default function SwipeableConversationRow({
         )}
       </div>
 
-      {/* Swipe hint overlay */}
+      {/* Swipe hint overlay — fades out via CSS after 1.2s */}
       {showHintAnimation && (
-        <div className="absolute inset-0 flex items-center justify-end pointer-events-none pr-6 animate-fade-in">
+        <div className="absolute inset-0 flex items-center justify-end pointer-events-none pr-6 animate-hint-label">
           <div className="bg-gray-900/80 text-white text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1.5">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />

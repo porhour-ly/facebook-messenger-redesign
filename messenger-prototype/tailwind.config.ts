@@ -26,6 +26,7 @@ const config: Config = {
         "swipe-hint": "swipeHint 1.5s ease-in-out 2",
         "slide-down": "slideDown 0.3s ease-out",
         "check-pop": "checkPop 0.4s ease-out",
+        "hint-label": "hintLabel 1.8s ease-out forwards",
       },
       keyframes: {
         slideUp: {
@@ -66,6 +67,12 @@ const config: Config = {
           "0%": { transform: "scale(0)", opacity: "0" },
           "50%": { transform: "scale(1.2)", opacity: "1" },
           "100%": { transform: "scale(1)", opacity: "1" },
+        },
+        hintLabel: {
+          "0%": { opacity: "0" },
+          "10%": { opacity: "1" },
+          "65%": { opacity: "1" },
+          "100%": { opacity: "0" },
         },
       },
     },
