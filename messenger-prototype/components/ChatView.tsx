@@ -29,6 +29,7 @@ function getAvatarColor(id: string) {
 
 export default function ChatView({ conversation, onBack, onMessageSent, onReplyReceived }: ChatViewProps) {
   const [inputValue, setInputValue] = useState("");
+  const [imgError, setImgError] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -102,11 +103,20 @@ export default function ChatView({ conversation, onBack, onMessageSent, onReplyR
           </svg>
         </button>
         <div className="relative flex-shrink-0">
-          <div
-            className={`w-10 h-10 rounded-full ${colorClass} flex items-center justify-center text-white font-bold text-sm`}
-          >
-            {participant.avatar}
-          </div>
+          {participant.avatarUrl && !imgError ? (
+            <img
+              src={participant.avatarUrl}
+              alt={participant.name}
+              className="w-10 h-10 rounded-full object-cover bg-gray-100"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <div
+              className={`w-10 h-10 rounded-full ${colorClass} flex items-center justify-center text-white font-bold text-sm`}
+            >
+              {participant.avatar}
+            </div>
+          )}
           {participant.isOnline && (
             <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
           )}

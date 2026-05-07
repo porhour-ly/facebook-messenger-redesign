@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Conversation } from "@/data/conversations";
 
 type ConversationRowProps = {
@@ -36,6 +37,7 @@ export default function ConversationRow({ conversation, showLabel = false, onTap
   const participant = conversation.participants[0];
   const colorClass = getAvatarColor(participant.id);
   const label = showLabel ? getLabel(conversation) : null;
+  const [imgError, setImgError] = useState(false);
 
   return (
     <button
@@ -43,11 +45,20 @@ export default function ConversationRow({ conversation, showLabel = false, onTap
       className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer text-left"
     >
       <div className="relative flex-shrink-0">
-        <div
-          className={`w-14 h-14 rounded-full ${colorClass} flex items-center justify-center text-white font-bold text-lg`}
-        >
-          {participant.avatar}
-        </div>
+        {participant.avatarUrl && !imgError ? (
+          <img
+            src={participant.avatarUrl}
+            alt={participant.name}
+            className="w-14 h-14 rounded-full object-cover bg-gray-100"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <div
+            className={`w-14 h-14 rounded-full ${colorClass} flex items-center justify-center text-white font-bold text-lg`}
+          >
+            {participant.avatar}
+          </div>
+        )}
         {participant.isOnline && (
           <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
         )}
