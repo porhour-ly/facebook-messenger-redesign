@@ -10,6 +10,8 @@ import ChatView from "@/components/ChatView";
 import BottomNav from "@/components/BottomNav";
 import ReviewCard from "@/components/ReviewCard";
 import UndoToast from "@/components/UndoToast";
+import SelectionTopBar from "@/components/SelectionTopBar";
+import SelectionActionBar from "@/components/SelectionActionBar";
 import { conversations as initialConversations, Conversation, Message } from "@/data/conversations";
 
 type ViewState = "inbox" | "chat-entering" | "chat" | "chat-leaving";
@@ -29,6 +31,10 @@ export default function InboxPage() {
   const [showUndoToast, setShowUndoToast] = useState(false);
   const [lastArchivedIds, setLastArchivedIds] = useState<string[]>([]);
   const [undoMessage, setUndoMessage] = useState("");
+
+  // --- Selection mode state ---
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // --- Derived data ---
   const inactiveAdConversations = useMemo(
@@ -101,6 +107,44 @@ export default function InboxPage() {
     setShowUndoToast(false);
     setLastArchivedIds([]);
   }, [lastArchivedIds]);
+
+  // --- Selection mode handlers ---
+  const handleLongPress = useCallback((id: string) => {
+    setSelectionMode(true);
+    setSelectedIds(new Set([id]));
+  }, []);
+
+  const handleToggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    setSelectedIds(new Set(filteredConversations.map((c) => c.id)));
+  }, [filteredConversations]);
+
+  const handleDeselectAll = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  const exitSelectionMode = useCallback(() => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleArchiveSelected = useCallback(() => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    archiveConversations(ids);
+    exitSelectionMode();
+  }, [selectedIds, archiveConversations, exitSelectionMode]);
 
   // --- Core inbox handlers ---
   const markAsRead = useCallback((id: string) => {
@@ -184,19 +228,31 @@ export default function InboxPage() {
           transition: "transform 300ms ease-in-out, opacity 300ms ease-in-out",
         }}
       >
-        <TopBar />
-        <TabBar
-          activeTab={activeTab}
-          onTabChange={(tab) => {
-            setActiveTab(tab);
-            setActiveSubTab("all");
-          }}
-          unreadCounts={unreadCounts}
-        />
-        {activeTab === "pages" && (
-          <SubTabBar activeSubTab={activeSubTab} onSubTabChange={setActiveSubTab} />
+        {selectionMode ? (
+          <SelectionTopBar
+            selectedCount={selectedIds.size}
+            totalCount={filteredConversations.length}
+            onSelectAll={handleSelectAll}
+            onDeselectAll={handleDeselectAll}
+            onClose={exitSelectionMode}
+          />
+        ) : (
+          <>
+            <TopBar />
+            <TabBar
+              activeTab={activeTab}
+              onTabChange={(tab) => {
+                setActiveTab(tab);
+                setActiveSubTab("all");
+              }}
+              unreadCounts={unreadCounts}
+            />
+            {activeTab === "pages" && (
+              <SubTabBar activeSubTab={activeSubTab} onSubTabChange={setActiveSubTab} />
+            )}
+            {activeTab === "friends" && <ActiveNowRow />}
+          </>
         )}
-        {activeTab === "friends" && <ActiveNowRow />}
 
         <ConversationList
           key={`${activeTab}-${activeSubTab}`}
@@ -204,7 +260,7 @@ export default function InboxPage() {
           showLabels={activeTab === "all" || activeTab === "pages"}
           onConversationTap={openChat}
           reviewCard={
-            showReviewCard ? (
+            showReviewCard && !selectionMode ? (
               <ReviewCard
                 inactiveCount={inactiveAdConversations.length}
                 onArchiveAll={() => archiveConversations(inactiveAdConversations.map((c) => c.id))}
@@ -221,8 +277,20 @@ export default function InboxPage() {
           onArchive={archiveConversation}
           swipeHintShown={swipeHintShown}
           onSwipeHintShown={() => setSwipeHintShown(true)}
+          selectionMode={selectionMode}
+          selectedIds={selectedIds}
+          onLongPress={handleLongPress}
+          onToggleSelect={handleToggleSelect}
         />
-        <BottomNav unreadCount={unreadCounts.all} />
+
+        {selectionMode ? (
+          <SelectionActionBar
+            selectedCount={selectedIds.size}
+            onArchive={handleArchiveSelected}
+          />
+        ) : (
+          <BottomNav unreadCount={unreadCounts.all} />
+        )}
       </div>
 
       {/* Chat layer */}

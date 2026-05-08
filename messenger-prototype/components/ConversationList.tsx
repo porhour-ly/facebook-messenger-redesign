@@ -14,6 +14,10 @@ type ConversationListProps = {
   onArchive?: (id: string) => void;
   swipeHintShown?: boolean;
   onSwipeHintShown?: () => void;
+  selectionMode?: boolean;
+  selectedIds?: Set<string>;
+  onLongPress?: (id: string) => void;
+  onToggleSelect?: (id: string) => void;
 };
 
 export default function ConversationList({
@@ -25,6 +29,10 @@ export default function ConversationList({
   onArchive,
   swipeHintShown = true,
   onSwipeHintShown,
+  selectionMode = false,
+  selectedIds,
+  onLongPress,
+  onToggleSelect,
 }: ConversationListProps) {
   if (conversations.length === 0) {
     return (
@@ -51,8 +59,6 @@ export default function ConversationList({
   return (
     <div className="flex-1 overflow-y-auto animate-list-in">
       {conversations.map((conversation, index) => {
-        const isSwipeable = onArchive && conversation.lastMessageFromAd && !conversation.hasUserReplied;
-
         return (
           <div key={conversation.id}>
             {/* Inject review card at position */}
@@ -60,7 +66,17 @@ export default function ConversationList({
               <div key="review-card">{reviewCard}</div>
             )}
 
-            {isSwipeable ? (
+            {selectionMode ? (
+              <ConversationRow
+                conversation={conversation}
+                showLabel={showLabels}
+                onTap={onConversationTap}
+                selectionMode={selectionMode}
+                selected={selectedIds?.has(conversation.id) ?? false}
+                onLongPress={onLongPress}
+                onToggleSelect={onToggleSelect}
+              />
+            ) : onArchive ? (
               <SwipeableConversationRow
                 conversation={conversation}
                 showLabel={showLabels}
@@ -68,12 +84,14 @@ export default function ConversationList({
                 onArchive={onArchive}
                 showSwipeHint={hintShownForId === conversation.id}
                 onSwipeHintShown={onSwipeHintShown || (() => {})}
+                onLongPress={onLongPress}
               />
             ) : (
               <ConversationRow
                 conversation={conversation}
                 showLabel={showLabels}
                 onTap={onConversationTap}
+                onLongPress={onLongPress}
               />
             )}
           </div>

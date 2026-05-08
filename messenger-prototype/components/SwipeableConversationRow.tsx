@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { Conversation } from "@/data/conversations";
 import ConversationRow from "./ConversationRow";
 
@@ -11,6 +11,7 @@ type SwipeableConversationRowProps = {
   onArchive: (id: string) => void;
   showSwipeHint: boolean;
   onSwipeHintShown: () => void;
+  onLongPress?: (id: string) => void;
 };
 
 export default function SwipeableConversationRow({
@@ -20,6 +21,7 @@ export default function SwipeableConversationRow({
   onArchive,
   showSwipeHint,
   onSwipeHintShown,
+  onLongPress,
 }: SwipeableConversationRowProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [offsetX, setOffsetX] = useState(0);
@@ -31,6 +33,23 @@ export default function SwipeableConversationRow({
   const isVerticalScroll = useRef(false);
   const [hintDone, setHintDone] = useState(false);
 
+  // Long-press state
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didLongPress = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    };
+  }, []);
+
+  const clearLongPress = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
   const containerWidth = () => containerRef.current?.offsetWidth || 400;
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
@@ -38,8 +57,17 @@ export default function SwipeableConversationRow({
     startY.current = e.clientY;
     isDragging.current = false;
     isVerticalScroll.current = false;
+    didLongPress.current = false;
     setDragging(false);
-  }, []);
+
+    // Start long-press timer
+    clearLongPress();
+    longPressTimer.current = setTimeout(() => {
+      longPressTimer.current = null;
+      didLongPress.current = true;
+      onLongPress?.(conversation.id);
+    }, 500);
+  }, [onLongPress, conversation.id, clearLongPress]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (isVerticalScroll.current) return;
@@ -49,6 +77,9 @@ export default function SwipeableConversationRow({
 
     // Determine scroll direction on first significant move
     if (!isDragging.current && Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+
+    // Any significant movement cancels long-press
+    clearLongPress();
 
     if (!isDragging.current) {
       if (Math.abs(dy) > Math.abs(dx)) {
@@ -63,9 +94,19 @@ export default function SwipeableConversationRow({
     // Only allow left swipe (negative dx)
     const clampedX = Math.min(0, dx);
     setOffsetX(clampedX);
-  }, []);
+  }, [clearLongPress]);
 
   const handlePointerUp = useCallback(() => {
+    clearLongPress();
+
+    // If long press just fired, suppress everything
+    if (didLongPress.current) {
+      isDragging.current = false;
+      setDragging(false);
+      setOffsetX(0);
+      return;
+    }
+
     if (!isDragging.current) {
       setOffsetX(0);
       setDragging(false);
@@ -82,7 +123,7 @@ export default function SwipeableConversationRow({
     } else {
       setOffsetX(0);
     }
-  }, [offsetX, onArchive, conversation.id]);
+  }, [offsetX, onArchive, conversation.id, clearLongPress]);
 
   const handleArchiveButton = useCallback(() => {
     setSlidingOut(true);
@@ -100,7 +141,6 @@ export default function SwipeableConversationRow({
   }
 
   const showHintAnimation = showSwipeHint && !hintDone;
-  const revealWidth = Math.abs(offsetX);
 
   return (
     <div ref={containerRef} className="relative overflow-hidden">
