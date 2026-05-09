@@ -97,7 +97,53 @@ Simple tab-based navigation with no complex AI sorting layers.
 
 ---
 
-## 7. Interaction Rules
+## 7. Inbox Cleanup Tools
+
+Users need efficient ways to remove low-value conversations from their inbox. The system provides three complementary cleanup mechanisms: swipe-to-archive for quick single actions, an inline review card for guided batch cleanup, and long-press selection for manual bulk operations.
+
+### 7.1 Swipe to Archive
+- **Gesture:** Swipe left on any conversation row to reveal an archive action
+- **Threshold:** Swiping past 40% of the row width triggers the archive
+- **Feedback:** Row slides out with animation; undo toast appears at bottom
+- **Scope:** Available on all conversations in all tabs
+- **Swipe hint:** On first encounter with an ad conversation, a brief animation demonstrates the swipe gesture with a "Swipe to archive" label
+
+### 7.2 Inline Review Card
+- **Trigger:** Appears automatically when 3 or more inactive ad conversations exist (ad-initiated, user never replied)
+- **Position:** Injected after the 3rd conversation row in the list
+- **Visibility:** Shown in the "All" tab and "Pages → All" sub-tab
+- **Actions:**
+  - **Archive All** — Archives all inactive ad conversations at once
+  - **Review** — Navigates to "Pages → Requested" for individual review
+  - **Dismiss** — Hides the card for the current session
+- **Feedback:** Archive All shows undo toast with count of archived conversations
+
+### 7.3 Long-Press to Select & Bulk Archive
+- **Entry:** Long-press (500ms hold) any conversation row to enter selection mode; that row becomes selected
+- **Selection mode UI:**
+  - **Selection toolbar** replaces the top bar — X button (left) to exit, "{N} selected" count (center), "Select All" / "Deselect All" toggle (right)
+  - **Checkboxes** appear on each conversation row over the avatar area (animated blue check when selected, empty circle when unselected)
+  - **Selected rows** display a light blue background
+  - **Action bar** replaces the bottom navigation — full-width "Archive ({N})" button, disabled when none selected
+- **Interactions in selection mode:**
+  - Tap any row to toggle its selection (does not open chat)
+  - Swipe gestures are disabled while in selection mode
+  - "Select All" selects all visible conversations in the current tab/filter
+- **Exit selection mode:**
+  - Tap X button in the toolbar
+  - Archive selected conversations (exits automatically after archiving)
+- **Feedback:** Archiving shows undo toast with count; undo restores all archived conversations
+- **Gesture coordination:** Long-press and swipe use the same initial touch point — horizontal movement (>5px) cancels the long-press timer and initiates swipe; holding still for 500ms triggers selection mode
+
+### 7.4 Undo Support
+- All archive actions (swipe, review card, bulk) show an undo toast
+- Toast appears above the bottom navigation for 5 seconds
+- "Undo" restores all conversations from the most recent archive action
+- Toast auto-dismisses with a fade-out animation
+
+---
+
+## 8. Conversation Interaction Rules
 
 ### Message Classification
 Conversations exist in one system but are filtered into multiple views.
@@ -113,7 +159,7 @@ Conversations exist in one system but are filtered into multiple views.
 
 ---
 
-## 8. Navigation Structure
+## 9. Navigation Structure
 
 **Top-level tabs:**
 
@@ -135,7 +181,7 @@ Conversations exist in one system but are filtered into multiple views.
 
 ---
 
-## 9. UX Requirements
+## 10. UX Requirements
 
 - Mobile-first design
 - Familiar messaging layout (no radical redesign of chat UI)
@@ -145,7 +191,7 @@ Conversations exist in one system but are filtered into multiple views.
 
 ---
 
-## 10. Success Metrics
+## 11. Success Metrics
 
 | Metric | Type |
 |---|---|
@@ -154,24 +200,28 @@ Conversations exist in one system but are filtered into multiple views.
 | Lower user-reported "can't find chat" complaints | Quantitative |
 | Increased engagement with relevant Pages conversations | Quantitative |
 | Reduced perceived inbox clutter | Qualitative |
+| Adoption rate of swipe-to-archive gesture | Quantitative |
+| Bulk archive usage (long-press selection) | Quantitative |
+| Review card engagement (Archive All vs Review vs Dismiss) | Quantitative |
+| Undo rate after archive actions | Quantitative |
 
 ---
 
-## 11. Future Considerations *(Out of Scope)*
+## 12. Future Considerations *(Out of Scope)*
 
 - AI-based prioritization of chats
 - Smart inbox sorting beyond recency
 - Search-first navigation model
-- Automatic archiving of inactive chats
 
 ---
 
-## 12. Summary
+## 13. Summary
 
 This redesign introduces a structured, filter-based inbox for Messenger that preserves simplicity while solving core usability issues:
 
 - **Clutter reduction** — Ad and one-off chats are isolated in Pages → Requested
 - **Improved discoverability** — Tab filters let users navigate by conversation type
 - **Clearer separation** — Personal, group, and transactional messages are distinct
+- **Efficient cleanup** — Swipe-to-archive, inline review cards, and long-press bulk selection give users multiple ways to clean up their inbox at different scales
 
-The system maintains chronological integrity in "All" while giving users control through meaningful filters.
+The system maintains chronological integrity in "All" while giving users control through meaningful filters and cleanup tools.
